@@ -489,4 +489,13 @@ class MPG
 
         return$newCommodities;
     }
+
+
+    function getPaymentData()
+    {
+        return [
+            'raw' => $this->postData,
+            'encrypted' => $this->postDataEncrypted
+        ];
+    }
 }
