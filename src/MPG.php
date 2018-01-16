@@ -283,7 +283,8 @@ class MPG
         }
 
         if (isset($params['InstFlag'])) {
-            array_walk(explode(',', $params['InstFlag']),
+            $flags = explode(',', $params['InstFlag']);
+            array_walk($flags,
                 function ($val, $key) {
                     if (!in_array($val, [1, 3, 6, 12, 18, 24])) {
                         return $this->errorMessage('InstFlag',
