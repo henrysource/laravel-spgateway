@@ -1,4 +1,8 @@
 # Laravel Spgateway
+[![Latest Stable Version](https://poser.pugx.org/leochien/laravel-spgateway/v/stable)](https://packagist.org/packages/leochien/laravel-spgateway)
+    [![Total Downloads](https://poser.pugx.org/leochien/laravel-spgateway/downloads)](https://packagist.org/packages/leochien/laravel-spgateway)
+    [![Latest Unstable Version](https://poser.pugx.org/leochien/laravel-spgateway/v/unstable)](https://packagist.org/packages/leochien/laravel-spgateway)
+    [![License](https://poser.pugx.org/leochien/laravel-spgateway/license)](https://packagist.org/packages/leochien/laravel-spgateway)
 
 Laravel Spgateway是一個開源的 [智付通](https://www.spgateway.com/) 非官方套件
 
@@ -88,7 +92,7 @@ $order = MPG::generate(
     '測試商品'
 );
 
-// $order的 postData 及 postDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $order的 getPostData() 及 getPostDataEncrypted() 會回傳包含即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 前台送出表單到智付通
 return $order->send();
@@ -122,7 +126,7 @@ $order = MPG::search(
 
 ##### 回傳
 
-1. `(Class)`: MPG Class實體，其中postData 及 postDataEncrypted包含即將送到智付通的表單資料
+1. `(Class)`: MPG Class實體，其中getPostData() 及 getPostDataEncrypted()會回傳即將送到智付通的表單資料
 
 ##### 使用範例
 ```
@@ -135,29 +139,30 @@ $order = MPG::generate(
 
 ##### 參數表
 
-| 欄位            |     型態     |       可選值      |   預設  | 備註                              |
-|-----------------|:------------:|:-----------------:|:-------:|-----------------------------------|
-| MerchantOrderNo |    Varchar(20)    |                   |         | 商店自訂編號，若無填寫則由套件產生                      |
-| LangType        |    String    |   `zh-tw` / `en`  | `zh-tw` |                                   |
-| TradeLimit      |    Number    |      60 ~ 900     |   180   |                                   |
-| ExpireDate      | String (Ymd) |                   |         |      範例：20171231                             |
-| ExpireTime      | String (His) |                   |         |      範例：183005                             |
-| ReturnURL       |      Url     |                   |         |                                   |
-| NotifyURL       |      Url     |                   |         |                                   |
-| CustomerURL     |      Url     |                   |         |                                   |
-| ClientBackURL   |      Url     |                   |         |                                   |
-| EmailModify     |    Number    |     `0` / `1`     |    1    |                                   |
-| LoginType       |    Number    |     `0` / `1`     |    0    |                                   |
-| OrderComment    |    String    |                   |         |                                   |
-| TokenTerm       |    String    |                   |         | 信用卡快速結帳                    |
-| CREDIT          |    Number    |     `0` / `1`     |         | 信用卡一次付清                    |
-| CreditRed       |    Number    |     `0` / `1`     |         | 信用卡紅利                        |
-| InstFlag        |    Number    |     `0` / `1`     |         | 信用卡分期付款                    |
-| UNIONPAY        |    Number    |     `0` / `1`     |         | 銀聯卡                            |
-| WEBATM          |    Number    |     `0` / `1`     |         | WebATM                            |
-| VACC            |    Number    |     `0` / `1`     |         | ATM轉帳                           |
-| CVS             |    Number    |     `0` / `1`     |         | 超商代碼繳費                      |
-| BARCODE         |    Number    |     `0` / `1`     |         | 條碼繳費，訂單金額需介於20～20000 |
+| 欄位            |     型態     |       可選值      |   預設  | 備註                                            |
+|-----------------|:------------:|:-----------------:|:-------:|----------------------------------------------|
+| MerchantOrderNo |  Varchar(20) |                   |         | 商店自訂編號，若無填寫則由套件產生               |
+| LangType        |    String    |   `zh-tw` / `en`  | `zh-tw` |                                              |
+| TradeLimit      |    Number    |      60 ~ 900     |   180   |                                              |
+| ExpireDate      | String (Ymd) |                   |         |      範例：20171231                           |
+| ReturnURL       |      Url     |                   |         |                                              |
+| NotifyURL       |      Url     |                   |         |                                              |
+| CustomerURL     |      Url     |                   |         |                                              |
+| ClientBackURL   |      Url     |                   |         |                                              |
+| EmailModify     |    Number    |     `0` / `1`     |    1    |                                              |
+| LoginType       |    Number    |     `0` / `1`     |    0    |                                              |
+| OrderComment    |    String    |                   |         |                                              |
+| TokenTerm       |    String    |                   |         | 信用卡快速結帳                                |
+| CREDIT          |    Number    |     `0` / `1`     |         | 信用卡一次付清                                |
+| CreditRed       |    Number    |     `0` / `1`     |         | 信用卡紅利                                    |
+| InstFlag        |    Number    |     `0` / `1`     |         | 信用卡分期付款                                 |
+| UNIONPAY        |    Number    |     `0` / `1`     |         | 銀聯卡                                        |
+| WEBATM          |    Number    |     `0` / `1`     |         | WebATM                                       |
+| VACC            |    Number    |     `0` / `1`     |         | ATM轉帳                                      |
+| CVS             |    Number    |     `0` / `1`     |         | 超商代碼繳費                                  |
+| BARCODE         |    Number    |     `0` / `1`     |         | 條碼繳費，訂單金額需介於20～20000               |
+| CREDITAGREEMENT |    Number    |     `0` / `1`     |         | 約定信用卡授權                                |
+| TokenLife       |    String    |                   |         | 約定信用卡付款之有效日期，範例：1912（2019-12）  |
 
 ##### 備註
 * 支付方式若無選擇，默認開啟智付通後台設定方式
@@ -174,14 +179,14 @@ $order->send();
 
 > ### parse ($tradeInfo)
 
-解析智付通交易結果回傳參數
+解析智付通交易結果回傳參數，也適用於取號完成
 
 ##### 參數
 
 1. `tradeInfo (String)`: 智付通回傳，經AES加密之交易資料
 
 ##### 回傳
-詳見[智付通文件](https://www.spgateway.com/WebSiteData/document/4.pdf)第四節：交易查詢系統回應訊息
+詳見[智付通文件](https://www.spgateway.com/WebSiteData/document/5.pdf)第六節：交易支付系統回傳參數說明 / 第七節：取號完成系統回傳參數說明
 ```
 {
     "Status": "..."
@@ -238,7 +243,7 @@ $receipt = Receipt::generate([
     'ItemPrice'       => [10],
 ]);
 
-// $receipt的 postData 及 postDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $receipt的 getPostData() 及 getPostDataEncrypted 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 送出開立發票申請，取得發票開立回傳結果
 $res = $receipt->send();
@@ -249,7 +254,7 @@ $res = $receipt->send();
 // 產生智付通出發開立發票資料
 $receipt = Receipt::generateTrigger('17122817285242624', '20171121WJNBX5NNBP', 100);
 
-// $receipt的 triggerPostData 及 triggerPostDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $receipt的 getTriggerPostData() 及 getTriggerPostDataEncrypted() 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 送出觸發開立發票申請，取得發票觸發開立回傳結果
 $res = $receipt->send();
@@ -260,7 +265,7 @@ $res = $receipt->send();
 // 產生智付通作廢發票資料
 $receipt = Receipt::generateInvalid('YF83646422', '作廢原因');
 
-// $receipt的 invalidPostData 及 invalidPostDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $receipt的 getInvalidPostData() 及 getInvalidPostDataEncrypted() 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 送出作廢發票申請，取得作廢發票回傳結果
 $res = $receipt->sendInvalid();
@@ -283,7 +288,7 @@ $receipt = Receipt::search('20171121WJNBX5NNBP', 100);
 
 ##### 回傳
 
-1. `(Class)`: Class實體，其中postData 及 postDataEncrypted包含即將送到智付通的表單資料
+1. `(Class)`: Class實體，其中getPostData() 及 getPostDataEncrypted()包含即將送到智付通的表單資料
 
 ##### 使用範例
 ```
@@ -365,7 +370,7 @@ $res = $receipt->send();
 
 ##### 回傳
 
-1. `(Class)`: Class實體，其中triggerPostData 及 triggerPostDataEncrypted包含即將送到智付通的表單資料
+1. `(Class)`: Class實體，其中getTriggerPostData() 及 getTriggerPostDataEncrypted()會回傳即將送到智付通的表單資料
 
 ##### 使用範例
 ```
@@ -402,7 +407,7 @@ $res = $receipt->sendTrigger();
 
 ##### 回傳
 
-1. `(Class)`: Class實體，其中invalidPostData 及 invalidPostDataEncrypted包含即將送到智付通的表單資料
+1. `(Class)`: Class實體，其中getInvalidPostData() 及 getInvalidPostDataEncrypted()會回傳即將送到智付通的表單資料
 
 ##### 使用範例
 ```
@@ -463,7 +468,7 @@ $res = $receipt->search('20171121WJNBX5NNBP', 100);
 $refund = Refund::generate('20171121WJNBX5NNBP', 100);
 
 // $refund的 postType為cacnel時，訂單準備取消授權；為refund時，訂單準備退款
-// $refund的 postData 及 postDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $refund的 getPostData() 及 getPostDataEncrypted() 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 送出退款/取消授權申請，取得回傳結果
 $res = $refund->send();
@@ -485,7 +490,7 @@ $res = $refund->send();
 
 ##### 回傳
 
-1. `(Class)`: Class實體，其中postData 及 postDataEncrypted包含即將送到智付通的表單資料；postType為cacnel時，訂單準備取消授權，為refund時，訂單準備退款
+1. `(Class)`: Class實體，其中getPostData() 及 getPostDataEncrypted()包含即將送到智付通的表單資料；getPostType()為cacnel時，訂單準備取消授權，為refund時，訂單準備退款
 
 ##### 使用範例
 ```
@@ -532,6 +537,86 @@ $refund = Refund::generate('20171121WJNBX5NNBP', 100);
 $res = $refund->send();
 ```
 
+### 已約定信用卡付款
+
+#### 快速上手
+```
+// 產生付款必要資訊
+$charge = Charge::generate(
+    100,
+    'email@email.com',
+    'itemDesc',
+    'xxxxxxxxxxxxxxxxxx',
+    'xxx',
+    [
+        'MerchantOrderNo' => '20171121WJNBX5NNBP'
+    ]
+);
+
+// $transfer的 getPostData() 及 getPostDataEncrypted() 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
+
+// 送出扣款
+$res = $charge->send();
+```
+#### 可用方法
+
+> ### generate ($amount, $email, $itemDesc, $tokenValue, $tokenTerm, $params)
+
+產生已約定信用卡付款必要欄位
+
+##### 參數
+
+1. `$amount (String)`: 金額
+2. `$email (String)`: 購買人 Email
+3. `$itemDesc (Integer)`: 商品描述
+4. `$tokenValue (Integer)`: 約定信用卡授權碼
+5. `$tokenTerm ()`: 約定信用卡付款之付款人綁定資料
+6. `$params ()`: 可選選項
+
+##### 可選參數
+
+| 欄位               | 必填 |  型態  | 備註                                       |
+|-------------------|:----:|:------:|-------------------------------------------|
+| MerchantOrderNo   |     | String | 訂單編號                                    |
+| TokenSwitch       |     | String | 當此參數為”on”時，才會啟用約定信用卡付款授權功能 |
+
+##### 回傳
+
+1. `(Class)`: Class實體，其中 getPostData() 及 getPostDataEncrypted() 包含即將送到智付通的表單資料
+
+##### 使用範例
+```
+$charge = Charge::generate(
+    100,
+    'email@email.com',
+    'itemDesc',
+    'xxxxxxxxxxxxxxxxxx',
+    'xxx',
+    [
+        'MerchantOrderNo' => '20171121WJNBX5NNBP'
+    ]
+);
+```
+
+> ### send()
+
+傳送已約定信用卡付款請求到智付通
+
+##### 回傳
+本文件未公開，請向合作之智付通業務人員索取
+```
+{
+    "Status": "..."
+    "Message": "..."
+    "Result": {...}
+}
+```
+
+##### 使用範例
+```
+$res = $transfer->send();
+```
+
 ### 平台費用扣款指示
 
 #### 快速上手
@@ -539,7 +624,7 @@ $res = $refund->send();
 // 產生平台費用扣款指示必要資訊
 $transfer = Transfer::generate('20171121WJNBX5NNBP', 100, 0, 0);
 
-// $transfer的 postData 及 postDataEncrypted 中包含即將傳送到智付通的表單資料，可在此時紀錄log
+// $transfer的 getPostData() 及 getPostDataEncrypted() 會回傳即將傳送到智付通的表單資料，可在此時紀錄log
 
 // 送出扣款指示申請，取得扣款指示回傳結果
 $res = $transfer->send();
@@ -559,7 +644,7 @@ $res = $transfer->send();
 
 ##### 回傳
 
-1. `(Class)`: Class實體，其中postData 及 postDataEncrypted包含即將送到智付通的表單資料
+1. `(Class)`: Class實體，其中getPostData() 及 getPostDataEncrypted()包含即將送到智付通的表單資料
 
 ##### 使用範例
 ```

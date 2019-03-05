@@ -17,7 +17,7 @@ class Receipt
 
     public function __construct()
     {
-        if (env('APP_ENV') === 'production') {
+        if (config('app.env') === 'production') {
             $this->apiUrl['CREATE_RECEIPT_API']
                 = 'https://inv.pay2go.com/API/invoice_issue';
             $this->apiUrl['INVALID_RECEIPT_API']
@@ -47,21 +47,22 @@ class Receipt
      *
      * @return $this|array
      */
-    public function generate(
-        array $params
-    ) {
+    public function generate(array $params)
+    {
         $params['TaxRate'] = $params['TaxRate'] ?? 5;
         $params['Category'] = $params['Category'] ?? 'B2C';
 
         $itemAmt = [];
+
+        if ($params['Category'] === 'B2B') {
+            $params['ItemPrice'] = array_map(function ($price) use ($params) {
+                return $this->priceBeforeTax($price, $params['TaxRate']);
+            }, $params['ItemPrice']);
+        }
+
         foreach ($params['ItemCount'] as $k => $v) {
-            if ($params['Category'] === 'B2B') {
-                $itemAmt[$k] = $this->priceBeforeTax($params['ItemCount'][$k]
-                    * $params['ItemPrice'][$k], $params['TaxRate']);
-            } else {
-                $itemAmt[$k] = $params['ItemCount'][$k]
-                    * $params['ItemPrice'][$k];
-            }
+            $itemAmt[$k] = $params['ItemCount'][$k]
+                * $params['ItemPrice'][$k];
         }
 
         $params['ItemName'] = implode('|', $params['ItemName']);
@@ -106,7 +107,7 @@ class Receipt
             'ItemPrice'        => $params['ItemPrice'],
             'ItemAmt'          => $params['ItemAmt'],
             'ItemTaxType'      => $params['ItemTaxType'] ?? null,
-            'Comment'          => $params['Comment'] ?? null
+            'Comment'          => $params['Comment'] ?? null,
         ];
 
         $this->postData = array_filter($postData, function ($value) {
@@ -116,6 +117,18 @@ class Receipt
         return $this->encrypt();
     }
 
+    public function priceBeforeTax($price, $tax)
+    {
+        return $price - $this->calcTax($price, $tax);
+    }
+
+    public function calcTax($price, $tax)
+    {
+        $taxRate = $tax / 100;
+
+        return $price - round($price / (1 + $taxRate));
+    }
+
     /**
      * 加密開立發票資料
      *
@@ -123,8 +136,11 @@ class Receipt
      */
     private function encrypt()
     {
-        $postDataEncrypted
-            = $this->helpers->encryptPostData($this->postData);
+        $postDataEncrypted = $this->helpers->encryptPostData(
+            $this->postData,
+            config('spgateway.receipt.HashKey'),
+            config('spgateway.receipt.HashIV')
+        );
 
         $this->postDataEncrypted = [
             'MerchantID_' => config('spgateway.receipt.MerchantID'),
@@ -137,13 +153,16 @@ class Receipt
     /**
      * 傳送開立發票請求到智付通
      *
+     * @param array $headers 自訂Headers
+     *
      * @return mixed
      */
-    public function send()
+    public function send($options = [])
     {
         $res = $this->helpers->sendPostRequest(
             $this->apiUrl['CREATE_RECEIPT_API'],
-            $this->postDataEncrypted
+            $this->postDataEncrypted,
+            $options
         );
 
         $result = json_decode($res);
@@ -153,17 +172,6 @@ class Receipt
         }
 
         return $result;
-    }
-
-    public function calcTax($price, $tax)
-    {
-        $taxRate = $tax / 100;
-        return $price - round($price / (1 + $taxRate));
-    }
-
-    public function priceBeforeTax($price, $tax)
-    {
-        return $price - $this->calcTax($price, $tax);
     }
 
     /**
@@ -208,8 +216,12 @@ class Receipt
      */
     private function encryptTrigger()
     {
-        $postDataEncrypted
-            = $this->helpers->encryptPostData($this->triggerPostData);
+        $postDataEncrypted = $this->helpers
+            ->encryptPostData(
+                $this->triggerPostData,
+                config('spgateway.receipt.HashKey'),
+                config('spgateway.receipt.HashIV')
+            );
 
         $this->triggerPostDataEncrypted = [
             'MerchantID_' => config('spgateway.receipt.MerchantID'),
@@ -282,7 +294,6 @@ class Receipt
         return $this;
     }
 
-
     /**
      * 送出作廢電子發票請求到智付通
      *
@@ -325,7 +336,7 @@ class Receipt
 
         $postDataEncrypted = [
             'MerchantID_' => config('spgateway.receipt.MerchantID'),
-            'PostData_'   => $this->helpers->encryptPostData($postData)
+            'PostData_'   => $this->helpers->encryptPostData($postData),
         ];
 
         $res = $this->helpers->sendPostRequest(
@@ -340,5 +351,35 @@ class Receipt
         }
 
         return $result;
+    }
+
+    public function getPostData()
+    {
+        return $this->postData;
+    }
+
+    public function getPostDataEncrypted()
+    {
+        return $this->postDataEncrypted;
+    }
+
+    public function getTriggerPostData()
+    {
+        return $this->triggerPostData;
+    }
+
+    public function getTriggerPostDataEncrypted()
+    {
+        return $this->triggerPostDataEncrypted;
+    }
+
+    public function getInvalidPostData()
+    {
+        return $this->invalidPostData;
+    }
+
+    public function getInvalidPostDataEncrypted()
+    {
+        return $this->invalidPostDataEncrypted;
     }
 }

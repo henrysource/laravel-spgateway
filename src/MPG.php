@@ -15,7 +15,7 @@ class MPG
     public function __construct()
     {
         $this->apiUrl = [];
-        if (env('APP_ENV') === 'production') {
+        if (config('app.env') === 'production') {
             $this->apiUrl['MPG_API']
                 = 'https://core.spgateway.com/MPG/mpg_gateway';
             $this->apiUrl['QUERY_TRADE_INFO_API']
@@ -60,46 +60,49 @@ class MPG
             }
 
             $postData = [
-                'Amt'             => $amount,
-                'ItemDesc'        => $itemDesc,
-                'Email'           => $email,
-                'MerchantID'      => config('spgateway.mpg.MerchantID'),
-                'RespondType'     => 'JSON',
-                'TimeStamp'       => time(),
-                'Version'         => '1.4',
+                'Amt' => $amount,
+                'ItemDesc' => $itemDesc,
+                'Email' => $email,
+                'MerchantID' => config('spgateway.mpg.MerchantID'),
+                'RespondType' => 'JSON',
+                'TimeStamp' => time(),
+                'Version' => '1.4',
                 'MerchantOrderNo' => $params['MerchantOrderNo'] ??
                     $this->helpers->generateOrderNo(),
-                'LangType'        => $params['LangType'] ?? 'zh-tw',
-                'TradeLimit'      => $params['TradeLimit'] ?? 180,
-                'ExpireDate'      => $params['ExpireDate'] ?? null,
-                'ExpireTime'      => $params['ExpireTime'] ?? null,
-                'ReturnURL'       => $params['ReturnURL'] ?? null,
-                'NotifyURL'       => $params['NotifyURL'] ?? null,
-                'CustomerURL'     => $params['CustomerURL'] ?? null,
-                'ClientBackURL'   => $params['ClientBackURL'] ?? null,
-                'EmailModify'     => $params['EmailModify'] ?? 1,
-                'LoginType'       => $params['LoginType'] ?? 0,
-                'OrderComment'    => $params['OrderComment'] ?? null,
-                'TokenTerm'       => $params['TokenTerm'] ?? null,
-                'CREDIT'          => $params['CREDIT'] ?? null,
-                'CreditRed'       => $params['CreditRed'] ?? null,
-                'InstFlag'        => $params['InstFlag'] ?? null,
-                'UNIONPAY'        => $params['UNIONPAY'] ?? null,
-                'WEBATM'          => $params['WEBATM'] ?? null,
-                'VACC'            => $params['VACC'] ?? null,
-                'CVS'             => $params['CVS'] ?? null,
-                'BARCODE'         => $params['BARCODE'] ?? null,
-                'CREDITAE'        => $params['BARCODE'] ?? null,
-                'ALIPAY'          => $params['ALIPAY'] ?? null,
-                'TENPAY'          => $params['TENPAY'] ?? null,
+                'LangType' => $params['LangType'] ?? 'zh-tw',
+                'TradeLimit' => $params['TradeLimit'] ?? 180,
+                'ExpireDate' => $params['ExpireDate'] ?? null,
+                'ReturnURL' => $params['ReturnURL'] ?? null,
+                'NotifyURL' => $params['NotifyURL'] ?? null,
+                'CustomerURL' => $params['CustomerURL'] ?? null,
+                'ClientBackURL' => $params['ClientBackURL'] ?? null,
+                'EmailModify' => $params['EmailModify'] ?? 1,
+                'LoginType' => $params['LoginType'] ?? 0,
+                'OrderComment' => $params['OrderComment'] ?? null,
+                'TokenTerm' => $params['TokenTerm'] ?? null,
+                'CREDIT' => $params['CREDIT'] ?? null,
+                'CreditRed' => $params['CreditRed'] ?? null,
+                'InstFlag' => $params['InstFlag'] ?? null,
+                'UNIONPAY' => $params['UNIONPAY'] ?? null,
+                'WEBATM' => $params['WEBATM'] ?? null,
+                'VACC' => $params['VACC'] ?? null,
+                'CVS' => $params['CVS'] ?? null,
+                'BARCODE' => $params['BARCODE'] ?? null,
+                'CREDITAE' => $params['BARCODE'] ?? null,
+                'ALIPAY' => $params['ALIPAY'] ?? null,
+                'TENPAY' => $params['TENPAY'] ?? null,
+
+                // 信用卡授權專用欄位
+                'CREDITAGREEMENT' => $params['CREDITAGREEMENT'] ?? null,
+                'TokenLife' => $params['TokenLife'] ?? null,
 
                 // 以下為支付寶 / 財付通專用欄位
-                'Receiver'        => $params['Receiver'] ?? null,
-                'Tel1'            => $params['Tel1'] ?? null,
-                'Tel2'            => $params['Tel2'] ?? null,
+                'Receiver' => $params['Receiver'] ?? null,
+                'Tel1' => $params['Tel1'] ?? null,
+                'Tel2' => $params['Tel2'] ?? null,
             ];
 
-            if(isset($params['Commodities'])){
+            if (isset($params['Commodities'])) {
                 $postData['Count'] = count($params['Commodities']);
                 $postData = array_merge($postData, $this->parseCommodities($params['Commodities']));
             }
@@ -127,10 +130,10 @@ class MPG
         $tradeSha = $this->createMpgSHA256Encrypt($tradeInfo);
 
         $this->postDataEncrypted = [
-            'MerchantID' => env('SPGATEWAY_MERCHANT_ID'),
-            'TradeInfo'  => $tradeInfo,
-            'TradeSha'   => $tradeSha,
-            'Version'    => '1.4',
+            'MerchantID' => config('spgateway.mpg.MerchantID'),
+            'TradeInfo' => $tradeInfo,
+            'TradeSha' => $tradeSha,
+            'Version' => '1.4',
         ];
 
         return $this;
@@ -147,7 +150,7 @@ class MPG
         return view('spgateway::send-order',
             [
                 'apiUrl' => $this->apiUrl['MPG_API'],
-                'order'  => $this->postDataEncrypted
+                'order' => $this->postDataEncrypted
             ]);
     }
 
@@ -178,8 +181,8 @@ class MPG
             return $this->errorMessage('Amt', '必須為大於0的整數');
         }
 
-        if (strlen($itemDesc) > 50) {
-            return $this->errorMessage('Amt', '必須小於50字');
+        if (mb_strlen($itemDesc) > 50) {
+            return $this->errorMessage('ItemDesc', '必須小於50字');
         }
 
         if (isset($params['TradeLimit'])) {
@@ -189,34 +192,18 @@ class MPG
         }
 
         if (isset($params['ExpireDate'])) {
-            if (date_parse_from_format('Y-m-d',
+            if (date_parse_from_format('Ymd',
                     $params['ExpireDate'])['error_count']
                 > 0
             ) {
                 return $this->errorMessage('ExpireDate',
-                    '格式需為Y-m-d，如:2017-01-01');
+                    '格式需為Ymd，如:20170101');
             }
 
-            if (strtotime($params['ExpireDate']) < time()
-                || strtotime('-180 days', $params['ExpireDate']) > time()
+            if (strtotime($params['ExpireDate']) < strtotime('today')
+                || strtotime('-180 days', strtotime($params['ExpireDate'])) > strtotime('today')
             ) {
                 return $this->errorMessage('ExpireDate', '可接受最大值為 180 天');
-            }
-        }
-
-        if (isset($params['ExpireTime'])) {
-            if (date_parse_from_format('H:i:s',
-                    $params['ExpireTime'])['error_count']
-                > 0
-            ) {
-                return $this->errorMessage('ExpireTime',
-                    '格式需為Y-m-d，如:2017-01-01');
-            }
-
-            if (strtotime($params['ExpireTime']) < time()
-                || strtotime('-1 hour', $params['ExpireTime']) > time()
-            ) {
-                return $this->errorMessage('ExpireTime', '可接受最大值為 180 天');
             }
         }
 
@@ -343,7 +330,7 @@ class MPG
     private function errorMessage($field, $message)
     {
         return [
-            'field'   => $field,
+            'field' => $field,
             'message' => $message,
         ];
     }
@@ -412,7 +399,7 @@ class MPG
      * 搜尋訂單
      *
      * @param string $orderNo
-     * @param int    $amount
+     * @param int $amount
      *
      * @return mixed
      */
@@ -421,12 +408,12 @@ class MPG
         $amount
     ) {
         $postData = [
-            'MerchantID'      => config('spgateway.mpg.MerchantID'),
-            'Version'         => '1.1',
-            'RespondType'     => 'JSON',
-            'TimeStamp'       => time(),
+            'MerchantID' => config('spgateway.mpg.MerchantID'),
+            'Version' => '1.1',
+            'RespondType' => 'JSON',
+            'TimeStamp' => time(),
             'MerchantOrderNo' => $orderNo,
-            'Amt'             => $amount,
+            'Amt' => $amount,
         ];
 
         $postData['CheckValue'] = $this->generateTradeInfoCheckValue($orderNo,
@@ -453,11 +440,11 @@ class MPG
     private function generateTradeInfoCheckValue($orderNo, $amount)
     {
         $data = [
-            'IV'              => config('spgateway.mpg.HashIV'),
-            'Amt'             => $amount,
-            'MerchantID'      => config('spgateway.mpg.MerchantID'),
+            'IV' => config('spgateway.mpg.HashIV'),
+            'Amt' => $amount,
+            'MerchantID' => config('spgateway.mpg.MerchantID'),
             'MerchantOrderNo' => $orderNo,
-            'Key'             => config('spgateway.mpg.HashKey'),
+            'Key' => config('spgateway.mpg.HashKey'),
         ];
 
         $check_code_str = http_build_query($data);
@@ -487,7 +474,17 @@ class MPG
             $newCommodities = array_merge($newCommodities, $newCommodity);
         }
 
-        return$newCommodities;
+        return $newCommodities;
+    }
+
+    public function getPostData()
+    {
+        return $this->postData;
+    }
+
+    public function getPostDataEncrypted()
+    {
+        return $this->postDataEncrypted;
     }
 
 

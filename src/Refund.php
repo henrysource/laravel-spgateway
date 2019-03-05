@@ -15,7 +15,7 @@ class Refund
     public function __construct()
     {
         $this->apiUrl = [];
-        if (env('APP_ENV') === 'production') {
+        if (config('app.env') === 'production') {
             $this->apiUrl['CREDIT_CARD_CANCEL_API']
                 = 'https://core.spgateway.com/API/CreditCard/Cancel';
             $this->apiUrl['CREDIT_CARD_REFUND_API']
@@ -56,9 +56,9 @@ class Refund
         $tradeInfo = $mpg->search($orderNo, $amount);
         $tradeInfo = $tradeInfo->Result;
 
-        if ($tradeInfo->TradeStatus === 1
+        if ($tradeInfo->TradeStatus === "1"
             && $tradeInfo->PaymentType === "CREDIT"
-            && $tradeInfo->CloseStatus === 0
+            && $tradeInfo->CloseStatus === "0"
         ) {
             $this->postData = $this->generateCreditCancel(
                 $orderNo,
@@ -67,9 +67,9 @@ class Refund
             );
 
             $this->postType = 'cancel';
-        } elseif ($tradeInfo->TradeStatus === 1
+        } elseif ($tradeInfo->TradeStatus === "1"
             && $tradeInfo->PaymentType === "CREDIT"
-            && $tradeInfo->CloseStatus === 3
+            && $tradeInfo->CloseStatus === "3"
         ) {
             $this->postData = $this->generateCreditRefund(
                 $orderNo,
@@ -78,7 +78,7 @@ class Refund
             );
 
             $this->postType = 'refund';
-        } elseif ($tradeInfo->TradeStatus === 1
+        } elseif ($tradeInfo->TradeStatus === "1"
             && $delayed === true
         ) {
             $this->postData = $this->generateDelayedRefund(
@@ -106,7 +106,7 @@ class Refund
         $PostData_ = $this->helpers->encryptPostData($this->postData);
 
         $this->postDataEncrypted = [
-            'MerchantID_' => env('SPGATEWAY_MERCHANT_ID'),
+            'MerchantID_' => config('spgateway.mpg.MerchantID'),
             'PostData_'   => $PostData_,
         ];
 
@@ -116,9 +116,11 @@ class Refund
     /**
      * 傳送退款 / 取消授權請求到智付通
      *
+     * @param array $headers 自訂Headers
+     *
      * @return mixed|string
      */
-    public function send()
+    public function send($headers = [])
     {
         if ($this->postType === 'cancel') {
             $url = $this->apiUrl['CREDIT_CARD_CANCEL_API'];
@@ -128,7 +130,11 @@ class Refund
             $url = $this->apiUrl['DELAYED_REFUND_API'];
         }
 
-        $res = $this->helpers->sendPostRequest($url, $this->postDataEncrypted);
+        $res = $this->helpers->sendPostRequest(
+            $url,
+            $this->postDataEncrypted,
+            $headers
+        );
 
         $res = json_decode($res);
 
@@ -176,8 +182,8 @@ class Refund
         $postData = [
             'RespondType'     => 'JSON',
             'Version'         => '1.0',
-            'Amt'             => $params['RefundAmt'] ?? $orderNo,
-            'MerchantOrderNo' => $amount,
+            'Amt'             => $params['RefundAmt'] ?? $amount,
+            'MerchantOrderNo' => $orderNo,
             'IndexType'       => 1,
             'TimeStamp'       => time(),
             'CloseType'       => 2,
@@ -205,5 +211,20 @@ class Refund
         $postData = array_merge($postData, $params);
 
         return $postData;
+    }
+
+    public function getPostData()
+    {
+        return $this->postData;
+    }
+
+    public function getPostType()
+    {
+        return $this->postType;
+    }
+
+    public function getPostDataEncrypted()
+    {
+        return $this->postDataEncrypted;
     }
 }
