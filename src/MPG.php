@@ -100,6 +100,9 @@ class MPG
                 'Receiver' => $params['Receiver'] ?? null,
                 'Tel1' => $params['Tel1'] ?? null,
                 'Tel2' => $params['Tel2'] ?? null,
+
+                //超商取貨付款
+                'CVSCOM' => $params['CVSCOM'] ?? null,
             ];
 
             if (isset($params['Commodities'])) {
@@ -307,6 +310,12 @@ class MPG
         if (isset($params['CVS'])) {
             if (!in_array($params['CVS'], [1, 0])) {
                 return $this->errorMessage('CVS', '必須為0或1');
+            }
+        }
+
+        if (isset($params['CVSCOM'])) {
+            if (!in_array($params['CVSCOM'], [3, 2, 1, 0])) {
+                return $this->errorMessage('CVSCOM', '必須為0 1 2 3');
             }
         }
 
